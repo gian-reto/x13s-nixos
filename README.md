@@ -13,7 +13,7 @@ The support for this machine is constantly improving in mainline kernel and upst
 {
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-    nixos-x13s.url = "git+https://codeberg.org/adamcstephens/nixos-x13s";
+    nixos-x13s.url = "github:gian-reto/x13s-nixos";
   };
 
   outputs =
@@ -25,18 +25,18 @@ The support for this machine is constantly improving in mainline kernel and upst
           inputs.nixos-x13s.nixosModules.default
           {
             nixos-x13s.enable = true;
-            nixos-x13s.kernel = "jhovold"; # jhovold is default, but mainline supported
+            nixos-x13s.kernel = "jhovold"; # `jhovold` is default, but mainline supported.
 
-            # install multiple kernels! note this increases eval time for each specialization
+            # Install multiple kernels! Note this increases eval time for each specialization.
             specialisation = {
-              # note that activation of each specialization is required to copy the dtb to the EFI, and thus boot
+              # Note that activation of each specialization is required to copy the dtb to the EFI, and thus boot.
               mainline.configuration.nixos-x13s.kernel = "mainline";
             };
 
-            # allow unfree firmware
+            # Allow unfree firmware.
             nixpkgs.config.allowUnfree = true;
 
-            # define your fileSystems
+            # Define your fileSystems.
             fileSystems."/".device = "/dev/notreal";
           }
         ];
@@ -50,7 +50,7 @@ The support for this machine is constantly improving in mainline kernel and upst
 Clone the repository:
 
 ```
-git clone https://codeberg.org/adamcstephens/nixos-x13s /etc/nixos/nixos-x13s
+ git clone https://github.com/gian-reto/x13s-nixos.git /etc/nixos/nixos-x13s
 ```
 
 Then reference the module in your `configuration.nix` and use the module as documented in the flake example above:
