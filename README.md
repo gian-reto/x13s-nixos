@@ -1,7 +1,7 @@
 # nixos x13s
 
-> [!CAUTION]
-> This project is unmaintained.
+> [!NOTE]
+> This project was forked from [adamcstephens/nixos-x13s](https://codeberg.org/adamcstephens/nixos-x13s), which is now unmaintained.
 
 This repository aims to provide easy, shared, support for Lenovo X13s on Linux.
 

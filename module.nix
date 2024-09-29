@@ -1,22 +1,22 @@
-{ dtbName }:
-{
+{dtbName}: {
   config,
   lib,
   options,
   pkgs,
   ...
-}:
-let
+}: let
   cfg = config.nixos-x13s;
 
-  x13sPackages = import ./packages/default.nix { inherit lib pkgs; };
+  x13sPackages = import ./packages/default.nix {inherit lib pkgs;};
 
   linuxPackages_x13s =
-    if cfg.kernel == "mainline" then
-      pkgs.linuxPackages_latest
+    if cfg.kernel == "mainline"
+    then pkgs.linuxPackages_latest
     else
       pkgs.linuxPackagesFor (
-        if cfg.kernel == "jhovold" then x13sPackages.linux_jhovold else throw "Unsupported kernel"
+        if cfg.kernel == "jhovold"
+        then x13sPackages.linux_jhovold
+        else throw "Unsupported kernel"
       );
   dtb = "${linuxPackages_x13s.kernel}/dtbs/qcom/${dtbName}";
   dtbEfiPath = "dtbs/x13s.dtb";
@@ -35,8 +35,7 @@ let
       x13sPackages.graphics-firmware
     ];
   };
-in
-{
+in {
   options.nixos-x13s = {
     enable = lib.mkEnableOption "x13s hardware support";
 
@@ -56,17 +55,10 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    assertions = [
-      {
-        assertion = false;
-        message = "adamcstephens/nixos-x13s is no longer maintained";
-      }
-    ];
-
-    environment.systemPackages = [ pkgs.efibootmgr ];
+    environment.systemPackages = [pkgs.efibootmgr];
 
     hardware.enableAllFirmware = true;
-    hardware.firmware = lib.mkBefore [ x13sPackages.graphics-firmware ];
+    hardware.firmware = lib.mkBefore [x13sPackages.graphics-firmware];
 
     boot = {
       initrd.systemd.enable = true;
@@ -132,11 +124,11 @@ in
       (_: super: {
         # don't try and use zfs
         zfs = super.zfs.overrideAttrs (_: {
-          meta.platforms = [ ];
+          meta.platforms = [];
         });
 
         # allow missing modules
-        makeModulesClosure = x: super.makeModulesClosure (x // { allowMissing = true; });
+        makeModulesClosure = x: super.makeModulesClosure (x // {allowMissing = true;});
       })
     ];
 
@@ -150,9 +142,9 @@ in
     '';
 
     systemd.services.bluetooth-x13s-mac = {
-      wantedBy = [ "multi-user.target" ];
-      before = [ "bluetooth.service" ];
-      requiredBy = [ "bluetooth.service" ];
+      wantedBy = ["multi-user.target"];
+      before = ["bluetooth.service"];
+      requiredBy = ["bluetooth.service"];
 
       serviceConfig = {
         Type = "oneshot";
