@@ -3,17 +3,22 @@
   fetchurl,
   innoextract,
 }:
-
 stdenv.mkDerivation {
   name = "uefi";
-  version = "1.60";
+  version = "1.61";
 
   src = fetchurl {
-    url = "https://download.lenovo.com/pccbbs/mobiles/n3huj19w.exe";
-    hash = "sha256-ZSjkvbMb0e9CoL2OYo3Aioyz3or1YkOX/BdOOeAuL7I=";
+    # # Get the latest BIOS Update URL. Copied from: https://github.com/BrainWart/x13s-nixos/blob/7c71316a1ab79a43ca578e40836c53fda76847d3/packages/uefi.nix.
+    # curl --silent --fail \
+    #   --header 'Referer: https://pcsupport.lenovo.com/us/en/products/laptops-and-netbooks/thinkpad-x-series-laptops/thinkpad-x13s-type-21bx-21by/downloads/driver-list/' \
+    #   'https://pcsupport.lenovo.com/us/en/api/v4/downloads/drivers?productId=laptops-and-netbooks%2Fthinkpad-x-series-laptops%2Fthinkpad-x13s-type-21bx-21by' \
+    # | jq '.body.DownloadItems[] | select(.Title | startswith("BIOS Update")) | .Files[] | select(.TypeString == "EXE") | .URL'
+
+    url = "https://download.lenovo.com/pccbbs/mobiles/n3huj20w.exe";
+    hash = "sha256-A3l/ZfIbFcvFX+bMWYgpW+1kkYPu5MQkuTCgszhaoIY=";
   };
 
-  nativeBuildInputs = [ innoextract ];
+  nativeBuildInputs = [innoextract];
 
   unpackPhase = ''
     innoextract $src
