@@ -4,41 +4,41 @@
     flake-parts.url = "github:hercules-ci/flake-parts";
   };
 
-  outputs =
-    inputs@{ flake-parts, self, ... }:
-    let
-      dtbName = "sc8280xp-lenovo-thinkpad-x13s.dtb";
-    in
-    flake-parts.lib.mkFlake { inherit inputs; } {
-      imports = [ ./packages/part.nix ];
+  outputs = inputs @ {
+    flake-parts,
+    self,
+    ...
+  }: let
+    dtbName = "sc8280xp-lenovo-thinkpad-x13s.dtb";
+  in
+    flake-parts.lib.mkFlake {inherit inputs;} {
+      imports = [./packages/part.nix];
 
       systems = [
         "x86_64-linux"
         "aarch64-linux"
       ];
 
-      perSystem =
-        { pkgs, ... }:
-        {
-          devShells = rec {
-            default = pkgs.mkShellNoCC { packages = [ pkgs.npins ] ++ ci.nativeBuildInputs; };
+      perSystem = {pkgs, ...}: {
+        devShells = rec {
+          default = pkgs.mkShellNoCC {packages = [pkgs.npins] ++ ci.nativeBuildInputs;};
 
-            ci = pkgs.mkShellNoCC {
-              packages = [
-                pkgs.cachix
-                pkgs.jq
-                pkgs.just
-                (pkgs.python3.withPackages (py: [
-                  py.PyGithub
-                  py.packaging
-                ]))
-                pkgs.pyright
-              ];
-            };
+          ci = pkgs.mkShellNoCC {
+            packages = [
+              pkgs.cachix
+              pkgs.jq
+              pkgs.just
+              (pkgs.python3.withPackages (py: [
+                py.PyGithub
+                py.packaging
+              ]))
+              pkgs.pyright
+            ];
           };
         };
+      };
 
-      flake.nixosModules.default = import ./module.nix { inherit dtbName; };
+      flake.nixosModules.default = import ./module.nix {inherit dtbName;};
 
       flake.nixosConfigurations = {
         example = inputs.nixpkgs.lib.nixosSystem {
@@ -46,10 +46,13 @@
           modules = [
             self.nixosModules.default
             (
-              { config, pkgs, ... }:
               {
+                config,
+                pkgs,
+                ...
+              }: {
                 nixos-x13s.enable = true;
-                nixos-x13s.kernel = "jhovold"; # jhovold is default, but mainline supported
+                nixos-x13s.kernel = "jhovold"; # jhovold is default.
 
                 # allow unfree firmware
                 nixpkgs.config.allowUnfree = true;
@@ -64,7 +67,6 @@
         iso = inputs.nixpkgs.lib.nixosSystem {
           system = "aarch64-linux";
           modules = [
-
             self.nixosModules.default
             (
               {
@@ -73,8 +75,7 @@
                 lib,
                 pkgs,
                 ...
-              }:
-              let
+              }: let
                 image = import "${inputs.nixpkgs}/nixos/lib/make-disk-image.nix" {
                   inherit config lib pkgs;
 
@@ -84,9 +85,7 @@
                   partitionTableType = "efi";
                   copyChannel = false;
                 };
-
-              in
-              {
+              in {
                 hardware.deviceTree = {
                   enable = true;
                   name = "qcom/${dtbName}";

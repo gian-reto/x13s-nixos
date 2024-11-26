@@ -9,15 +9,11 @@
 
   x13sPackages = import ./packages/default.nix {inherit lib pkgs;};
 
-  linuxPackages_x13s =
-    if cfg.kernel == "mainline"
-    then pkgs.linuxPackages_latest
-    else
-      pkgs.linuxPackagesFor (
-        if cfg.kernel == "jhovold"
-        then x13sPackages.linux_jhovold
-        else throw "Unsupported kernel"
-      );
+  linuxPackages_x13s = pkgs.linuxPackagesFor (
+    if cfg.kernel == "jhovold"
+    then x13sPackages.linux_jhovold
+    else throw "Unsupported kernel"
+  );
   dtb = "${linuxPackages_x13s.kernel}/dtbs/qcom/${dtbName}";
   dtbEfiPath = "dtbs/x13s.dtb";
 
@@ -47,9 +43,8 @@ in {
     kernel = lib.mkOption {
       type = lib.types.enum [
         "jhovold"
-        "mainline"
       ];
-      description = "Which patched kernel to use. jhovold is the latest RC or release with some x13s specific patches, and mainline is nixos latest";
+      description = "Which patched kernel to use. jhovold is the latest RC or release with some x13s specific patches.";
       default = "jhovold";
     };
   };
@@ -89,24 +84,24 @@ in {
       initrd = {
         kernelModules = [
           "nvme"
-          "phy-qcom-qmp-pcie"
-          "pcie-qcom"
+          "phy_qcom_qmp_pcie"
+          "pcie_qcom"
 
-          "i2c-core"
-          "i2c-hid"
-          "i2c-hid-of"
-          "i2c-qcom-geni"
+          "i2c_core"
+          "i2c_hid"
+          "i2c_hid-of"
+          "i2c_qcom-geni"
 
           "leds_qcom_lpg"
           "pwm_bl"
           "qrtr"
           "pmic_glink_altmode"
           "gpio_sbu_mux"
-          "phy-qcom-qmp-combo"
+          "phy_qcom_qmp_combo"
           "gpucc_sc8280xp"
           "dispcc_sc8280xp"
           "phy_qcom_edp"
-          "panel-edp"
+          "panel_edp"
           "msm"
         ];
       };
