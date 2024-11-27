@@ -34,15 +34,31 @@ in {
     defconfig = "johan_defconfig";
   };
 
+  # Video acceleration support (venus) & gpu firmware.
   graphics-firmware = let
-    gpu-src = pkgs.fetchurl {
-      url = "https://download.lenovo.com/pccbbs/mobiles/n3hdr20w.exe";
-      hash = "sha256-Jwyl9uKOnjpwfHd+VaGHjYs9x8cUuRdFCERuXqaJwEY=";
+    git-src = pkgs.fetchFromGitHub {
+      owner = "ironrobin";
+      repo = "x13s-alarm";
+      rev = "ea9ce5f";
+      hash = "sha256-h6b3zyNcgK3L8bs8Du+3PXmZ3hG+ht6CsGRObDvEYqA=";
     };
   in
     pkgs.runCommand "graphics-firmware" {} ''
-      mkdir -vp "$out/lib/firmware/qcom/sc8280xp/LENOVO/21BX"
-      ${lib.getExe pkgs.innoextract} ${gpu-src}
-      cp -v code\$GetExtractPath\$/*/*.mbn "$out/lib/firmware/qcom/sc8280xp/LENOVO/21BX/"
+      mkdir -pv "$out/lib/firmware/qcom/sc8280xp/LENOVO/21BX"
+      cp -fv "${git-src}/x13s-firmware/qcvss8280.mbn" "$out/lib/firmware/qcom/sc8280xp/LENOVO/21BX"
+      cp -fv "${git-src}/x13s-firmware/a690_gmu.bin" "$out/lib/firmware/qcom"
+    '';
+
+  bluetooth-firmware = let
+    git-src = pkgs.fetchgit {
+      url = "https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware";
+      rev = "77a11ffc5a0aaaadc870793d02f6c6781ee9f598";
+      hash = "sha256-edcLKEN5Nq0Gw+hS1bVfiTX7wDn9MzuZAdASo4EQcBo=";
+    };
+  in
+    pkgs.runCommand "bluetooth-firmware" {} ''
+      mkdir -pv "$out/lib/firmware/qca"
+      cp -fv "${git-src}/qca/hpnv21.b8c" "$out/lib/firmware/qca"
+      cp -fv "${git-src}/qca/hpnv21g.b8c" "$out/lib/firmware/qca"
     '';
 }

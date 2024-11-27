@@ -29,6 +29,7 @@
     paths = [
       modulesClosure
       x13sPackages.graphics-firmware
+      x13sPackages.bluetooth-firmware
     ];
   };
 in {
@@ -53,7 +54,10 @@ in {
     environment.systemPackages = [pkgs.efibootmgr];
 
     hardware.enableAllFirmware = true;
-    hardware.firmware = lib.mkBefore [x13sPackages.graphics-firmware];
+    hardware.firmware = lib.mkBefore [
+      x13sPackages.graphics-firmware
+      x13sPackages.bluetooth-firmware
+    ];
 
     boot = {
       initrd.systemd.enable = true;
