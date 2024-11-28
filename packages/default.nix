@@ -24,6 +24,20 @@
           MODULE_COMPRESS_XZ = yes;
         };
 
+        # See:
+        # - https://github.com/NixOS/nixpkgs/issues/351302
+        # - https://github.com/kuruczgy/x1e-nixos-config/issues/32
+        # - https://github.com/jollheef/nixos-image-thinkpad-t14s-gen6/blob/0047776a64e5636b43334b6990c6164d8a53921e/kernel.nix#L62
+        kernelPatches = [
+          {
+            name = "drm/panic: Select ZLIB_DEFLATE for DRM_PANIC_SCREEN_QR_CODE";
+            patch = pkgs.fetchurl {
+              url = "https://lore.kernel.org/linux-kernel/20241003230734.653717-1-ojeda@kernel.org/raw";
+              hash = "sha256-qZTP9o0Pel9M1Y9f/31SZbOJxeM0j28P94EUXa83m+Q=";
+            };
+          }
+        ];
+
         extraMeta.branch = lib.versions.majorMinor version;
       }
     );
