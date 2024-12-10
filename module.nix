@@ -28,6 +28,7 @@
     name = "modules-closure";
     paths = [
       modulesClosure
+      x13sPackages.device-firmware
       x13sPackages.graphics-firmware
       x13sPackages.bluetooth-firmware
     ];
@@ -55,6 +56,7 @@ in {
 
     hardware.enableAllFirmware = true;
     hardware.firmware = lib.mkBefore [
+      x13sPackages.device-firmware
       x13sPackages.graphics-firmware
       x13sPackages.bluetooth-firmware
     ];

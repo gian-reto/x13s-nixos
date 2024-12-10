@@ -41,6 +41,20 @@
         extraMeta.branch = lib.versions.majorMinor version;
       }
     );
+
+  ironrobin-git-src = pkgs.fetchFromGitHub {
+    owner = "ironrobin";
+    repo = "x13s-alarm";
+    rev = "ea9ce5f";
+    hash = "sha256-h6b3zyNcgK3L8bs8Du+3PXmZ3hG+ht6CsGRObDvEYqA=";
+  };
+
+  linux-firmware-git-src = pkgs.fetchgit {
+    url = "https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware";
+    # `linux-firmware-20241210`: https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/tag/?h=20241210.
+    rev = "7acec9a736995f10d1b783753ac9d3d2b8cad5a8";
+    hash = "sha256-z/YrFyL7Ee0bfwkLj5l1Ei3neMRS5ZAu76MA7T+48+g=";
+  };
 in {
   linux_jhovold = pkgs.callPackage linux_x13s_pkg {
     src = sources.linux-jhovold;
@@ -48,31 +62,22 @@ in {
     defconfig = "johan_defconfig";
   };
 
-  # Video acceleration support (venus) & gpu firmware.
-  graphics-firmware = let
-    git-src = pkgs.fetchFromGitHub {
-      owner = "ironrobin";
-      repo = "x13s-alarm";
-      rev = "ea9ce5f";
-      hash = "sha256-h6b3zyNcgK3L8bs8Du+3PXmZ3hG+ht6CsGRObDvEYqA=";
-    };
-  in
-    pkgs.runCommand "graphics-firmware" {} ''
-      mkdir -pv "$out/lib/firmware/qcom/sc8280xp/LENOVO/21BX"
-      cp -fv "${git-src}/x13s-firmware/qcvss8280.mbn" "$out/lib/firmware/qcom/sc8280xp/LENOVO/21BX"
-      cp -fv "${git-src}/x13s-firmware/a690_gmu.bin" "$out/lib/firmware/qcom"
-    '';
+  # Base firmware for the device from mainline `linux-firmware`.
+  device-firmware = pkgs.runCommand "device-firmware" {} ''
+    mkdir -pv "$out/lib/firmware/qcom/sc8280xp/LENOVO/21BX"
+    yes | cp -rfv "${linux-firmware-git-src}/qcom/sc8280xp/LENOVO/21BX/." "$out/lib/firmware/qcom/sc8280xp/LENOVO/21BX"
+  '';
 
-  bluetooth-firmware = let
-    git-src = pkgs.fetchgit {
-      url = "https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware";
-      rev = "77a11ffc5a0aaaadc870793d02f6c6781ee9f598";
-      hash = "sha256-edcLKEN5Nq0Gw+hS1bVfiTX7wDn9MzuZAdASo4EQcBo=";
-    };
-  in
-    pkgs.runCommand "bluetooth-firmware" {} ''
-      mkdir -pv "$out/lib/firmware/qca"
-      cp -fv "${git-src}/qca/hpnv21.b8c" "$out/lib/firmware/qca"
-      cp -fv "${git-src}/qca/hpnv21g.b8c" "$out/lib/firmware/qca"
-    '';
+  # Extra firmware for video acceleration support (venus) & gpu.
+  graphics-firmware = pkgs.runCommand "graphics-firmware" {} ''
+    mkdir -pv "$out/lib/firmware/qcom/sc8280xp/LENOVO/21BX"
+    yes | cp -fv "${ironrobin-git-src}/x13s-firmware/qcvss8280.mbn" "$out/lib/firmware/qcom/sc8280xp/LENOVO/21BX"
+    yes | cp -fv "${ironrobin-git-src}/x13s-firmware/a690_gmu.bin" "$out/lib/firmware/qcom"
+  '';
+
+  bluetooth-firmware = pkgs.runCommand "bluetooth-firmware" {} ''
+    mkdir -pv "$out/lib/firmware/qca"
+    yes | cp -fv "${linux-firmware-git-src}/qca/hpnv21.b8c" "$out/lib/firmware/qca"
+    yes | cp -fv "${linux-firmware-git-src}/qca/hpnv21g.b8c" "$out/lib/firmware/qca"
+  '';
 }
