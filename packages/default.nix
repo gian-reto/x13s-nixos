@@ -65,19 +65,19 @@ in {
   # Base firmware for the device from mainline `linux-firmware`.
   device-firmware = pkgs.runCommand "device-firmware" {} ''
     mkdir -pv "$out/lib/firmware/qcom/sc8280xp/LENOVO/21BX"
-    yes | cp -rfv "${linux-firmware-git-src}/qcom/sc8280xp/LENOVO/21BX/." "$out/lib/firmware/qcom/sc8280xp/LENOVO/21BX"
+    cp -fv "${linux-firmware-git-src}/qcom/sc8280xp/LENOVO/21BX"/* "$out/lib/firmware/qcom/sc8280xp/LENOVO/21BX"
   '';
 
   # Extra firmware for video acceleration support (venus) & gpu.
   graphics-firmware = pkgs.runCommand "graphics-firmware" {} ''
     mkdir -pv "$out/lib/firmware/qcom/sc8280xp/LENOVO/21BX"
-    yes | cp -fv "${ironrobin-git-src}/x13s-firmware/qcvss8280.mbn" "$out/lib/firmware/qcom/sc8280xp/LENOVO/21BX"
-    yes | cp -fv "${ironrobin-git-src}/x13s-firmware/a690_gmu.bin" "$out/lib/firmware/qcom"
+    cp -fv "${ironrobin-git-src}/x13s-firmware/qcvss8280.mbn" "$out/lib/firmware/qcom/sc8280xp/LENOVO/21BX"
+    cp -fv "${ironrobin-git-src}/x13s-firmware/a690_gmu.bin" "$out/lib/firmware/qcom"
   '';
 
   bluetooth-firmware = pkgs.runCommand "bluetooth-firmware" {} ''
     mkdir -pv "$out/lib/firmware/qca"
-    yes | cp -fv "${linux-firmware-git-src}/qca/hpnv21.b8c" "$out/lib/firmware/qca"
-    yes | cp -fv "${linux-firmware-git-src}/qca/hpnv21g.b8c" "$out/lib/firmware/qca"
+    cp -fv "${linux-firmware-git-src}/qca/hpnv21.b8c" "$out/lib/firmware/qca"
+    cp -fv "${linux-firmware-git-src}/qca/hpnv21g.b8c" "$out/lib/firmware/qca"
   '';
 }
