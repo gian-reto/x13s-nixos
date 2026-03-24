@@ -29,7 +29,7 @@
               pkgs.jq
               pkgs.just
               (pkgs.python3.withPackages (py: [
-                py.PyGithub
+                py.pygithub
                 py.packaging
               ]))
               pkgs.pyright
