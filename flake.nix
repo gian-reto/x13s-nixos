@@ -1,133 +1,128 @@
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    flake-parts.url = "github:hercules-ci/flake-parts";
   };
 
-  outputs = inputs @ {
-    flake-parts,
-    self,
-    ...
-  }: let
-    dtbName = "sc8280xp-lenovo-thinkpad-x13s.dtb";
-  in
-    flake-parts.lib.mkFlake {inherit inputs;} {
-      imports = [./packages/part.nix];
-
-      systems = [
-        "x86_64-linux"
-        "aarch64-linux"
-      ];
-
-      perSystem = {pkgs, ...}: {
-        devShells = rec {
-          default = pkgs.mkShellNoCC {packages = [pkgs.npins] ++ ci.nativeBuildInputs;};
-
-          ci = pkgs.mkShellNoCC {
-            packages = [
-              pkgs.cachix
-              pkgs.jq
-              pkgs.just
-              (pkgs.python3.withPackages (py: [
-                py.pygithub
-                py.packaging
-              ]))
-              pkgs.pyright
-            ];
-          };
-        };
-      };
-
-      flake.nixosModules.default = import ./module.nix {inherit dtbName;};
-
-      flake.nixosConfigurations = {
-        example = inputs.nixpkgs.lib.nixosSystem {
-          system = "aarch64-linux";
-          modules = [
-            self.nixosModules.default
+  outputs =
+    {
+      self,
+      nixpkgs,
+    }:
+    let
+      eachBuildSystem =
+        f:
+        builtins.zipAttrsWith (_: nixpkgs.lib.listToAttrs) (
+          map
             (
-              {
-                config,
-                pkgs,
-                ...
-              }: {
-                nixos-x13s.enable = true;
-                nixos-x13s.kernel = "jhovold"; # jhovold is default.
+              buildSystem:
+              builtins.mapAttrs (_: nixpkgs.lib.nameValuePair buildSystem) (f buildSystem)
+            )
+            [
+              "x86_64-linux"
+              "aarch64-linux"
+            ]
+        );
 
-                # allow unfree firmware
-                nixpkgs.config.allowUnfree = true;
+      mkPatchedNixpkgs =
+        buildSystem:
+        let
+          pkgsUnpatched = nixpkgs.legacyPackages.${buildSystem};
+        in
+        (pkgsUnpatched.applyPatches {
+          name = "nixpkgs-patched";
+          src = nixpkgs;
+          patches = [
+            (pkgsUnpatched.fetchpatch {
+              url = "https://github.com/NixOS/nixpkgs/commit/de1fdb6310af8f70c98746ba4550dc2799a03621.patch";
+              hash = "sha256-brqJxblmqWFAk8JgxmxXeHoiaWiQtsCsOzht/WlH5eE=";
+            })
+            ./nixpkgs-efi-shell.patch
+          ];
+        }).overrideAttrs {
+          allowSubstitutes = true;
+        };
 
-                # define your fileSystems
-                fileSystems."/".device = "/dev/notreal";
+      mkPkgs =
+        buildSystem:
+        import (mkPatchedNixpkgs buildSystem) {
+          overlays = [ self.overlays.default ];
+          localSystem.system = buildSystem;
+          crossSystem.system = "aarch64-linux";
+          allowUnsupportedSystem = true;
+        };
+
+      mkIso =
+        buildSystem:
+        nixpkgs.lib.nixosSystem {
+          modules = [
+            "${mkPatchedNixpkgs buildSystem}/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix"
+            ./iso.nix
+            self.nixosModules.default
+            {
+              nixpkgs.pkgs = mkPkgs buildSystem;
+              hardware.lenovo-thinkpad-x13s.enable = true;
+            }
+            (
+              { lib, pkgs, ... }:
+              lib.mkIf (pkgs.stdenv.buildPlatform != pkgs.stdenv.hostPlatform) {
+                isoImage.storeContents = [ (mkPatchedNixpkgs buildSystem) ];
+
+                system.systemBuilderCommands = ''
+                  echo -n "${pkgs.stdenv.buildPlatform.system}" > $out/build-system
+                '';
               }
             )
           ];
         };
 
-        iso = inputs.nixpkgs.lib.nixosSystem {
-          system = "aarch64-linux";
+      mkExample =
+        buildSystem:
+        nixpkgs.lib.nixosSystem {
           modules = [
             self.nixosModules.default
-            (
-              {
-                modulesPath,
-                config,
-                lib,
-                pkgs,
-                ...
-              }: let
-                image = import "${inputs.nixpkgs}/nixos/lib/make-disk-image.nix" {
-                  inherit config lib pkgs;
+            {
+              nixpkgs.pkgs = mkPkgs buildSystem;
+              hardware.lenovo-thinkpad-x13s.enable = true;
 
-                  name = "nixos-x13s-bootstrap";
-                  diskSize = "auto";
-                  format = "raw";
-                  partitionTableType = "efi";
-                  copyChannel = false;
-                };
-              in {
-                hardware.deviceTree = {
-                  enable = true;
-                  name = "qcom/${dtbName}";
-                };
+              fileSystems."/" = {
+                device = "/dev/disk/by-label/root";
+                fsType = "ext4";
+              };
 
-                system.build.bootstrap-image = image;
-
-                boot = {
-                  initrd = {
-                    systemd.enable = true;
-                    systemd.emergencyAccess = true;
-                  };
-
-                  loader = {
-                    grub.enable = false;
-                    systemd-boot.enable = true;
-                    systemd-boot.graceful = true;
-                  };
-                };
-
-                nixpkgs.config.allowUnfree = true;
-
-                nixos-x13s = {
-                  enable = true;
-                  bluetoothMac = "02:68:b3:29:da:98";
-                };
-
-                fileSystems = {
-                  "/boot" = {
-                    fsType = "vfat";
-                    device = "/dev/disk/by-label/ESP";
-                  };
-                  "/" = {
-                    device = "/dev/disk/by-label/nixos";
-                    fsType = "ext4";
-                    autoResize = true;
-                  };
-                };
-              }
-            )
+              fileSystems."/boot" = {
+                device = "/dev/disk/by-label/SYSTEM_DRV";
+                fsType = "vfat";
+              };
+            }
           ];
         };
+    in
+    (import ./default.nix)
+    // {
+      nixosConfigurations = self.nixosConfigurationsForBuildSystem.aarch64-linux;
+
+      overlays = {
+        default = import ./packages/overlay.nix;
       };
-    };
+    }
+    // eachBuildSystem (
+      buildSystem:
+      let
+        pkgs = mkPkgs buildSystem;
+        iso = mkIso buildSystem;
+        uefiPackages = import ./packages/part.nix { inherit pkgs; };
+      in
+      {
+        nixosConfigurationsForBuildSystem = {
+          example = mkExample buildSystem;
+          iso = iso;
+        };
+
+        packages = {
+          iso = iso.config.system.build.isoImage;
+          kernel = pkgs.x13s-linux.kernel;
+          inherit (uefiPackages) uefi;
+        };
+      }
+    );
 }

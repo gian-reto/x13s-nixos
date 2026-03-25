@@ -5,17 +5,11 @@
 }:
 stdenv.mkDerivation {
   name = "uefi";
-  version = "1.61";
+  version = "1.67";
 
   src = fetchurl {
-    # # Get the latest BIOS Update URL. Copied from: https://github.com/BrainWart/x13s-nixos/blob/7c71316a1ab79a43ca578e40836c53fda76847d3/packages/uefi.nix.
-    # curl --silent --fail \
-    #   --header 'Referer: https://pcsupport.lenovo.com/us/en/products/laptops-and-netbooks/thinkpad-x-series-laptops/thinkpad-x13s-type-21bx-21by/downloads/driver-list/' \
-    #   'https://pcsupport.lenovo.com/us/en/api/v4/downloads/drivers?productId=laptops-and-netbooks%2Fthinkpad-x-series-laptops%2Fthinkpad-x13s-type-21bx-21by' \
-    # | jq '.body.DownloadItems[] | select(.Title | startswith("BIOS Update")) | .Files[] | select(.TypeString == "EXE") | .URL'
-
-    url = "https://download.lenovo.com/pccbbs/mobiles/n3huj20w.exe";
-    hash = "sha256-A3l/ZfIbFcvFX+bMWYgpW+1kkYPu5MQkuTCgszhaoIY=";
+    url = "https://download.lenovo.com/pccbbs/mobiles/n3huj25w.exe";
+    hash = "sha256-LQbKh+Ncw/lTVnDenLUyyWhG4ilftK2eAKjnzJHTA7I=";
   };
 
   nativeBuildInputs = [innoextract];
