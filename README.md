@@ -49,7 +49,7 @@ Then use the exported module in your configuration:
 
 ## Installer ISO
 
-This repository exposes an X13s installer ISO as `.#iso` on `aarch64-linux`.
+This repository exposes an X13s installer ISO as `.#iso` on `aarch64-linux`. Additionally, tagged releases also publish the pre-built ISO and `SHA256SUMS` as GitHub release assets.
 
 Build it with:
 
@@ -167,3 +167,25 @@ fetchurl {
   hash = "sha256-A3l/ZfIbFcvFX+bMWYgpW+1kkYPu5MQkuTCgszhaoIY=";
 }
 ```
+
+## Releasing
+
+Tagged releases publish the pre-built installer ISO and `SHA256SUMS` as GitHub release assets.
+
+1. Update `main` with the changes you want to release.
+2. Create an annotated tag matching `v*`:
+
+   ```bash
+   git checkout main
+   git pull --ff-only
+   git tag -a v2026.04.03-1 -m "Release v2026.04.03-1"
+   ```
+
+3. Push the tag:
+
+   ```bash
+   git push origin v2026.04.03-1
+   ```
+
+4. Wait for the `Release` GitHub Actions workflow to finish.
+5. Verify that the GitHub Release contains the ISO and `SHA256SUMS`.
