@@ -1,0 +1,57 @@
+name: Build ISO
+
+on:
+  workflow_call:
+    inputs:
+      artifact-name:
+        type: string
+        default: x13s-iso
+      publish-release:
+        type: boolean
+        default: false
+      upload-artifact:
+        type: boolean
+        default: true
+
+jobs:
+  build-iso:
+    name: Build ISO
+    runs-on: ubuntu-24.04-arm
+
+    steps:
+      - uses: actions/checkout@v6
+      - uses: DeterminateSystems/nix-installer-action@main
+      - uses: DeterminateSystems/magic-nix-cache-action@main
+      - uses: DeterminateSystems/flake-checker-action@main
+
+      - name: Free disk space
+        run: |
+          sudo rm -rf \
+            /usr/share/dotnet /usr/local/lib/android /{usr,var}/lib/snapd \
+            /opt/{az,containerd,hostedtoolcache,ghc,google,mssql-tools,pipx*} \
+            $HOME/.{rustup,cargo,dotnet}
+          sudo docker image prune --all --force || true
+          sudo docker builder prune -a --force || true
+          df -h
+
+      - name: Build ISO
+        run: bash ./scripts/ci.sh
+
+      - name: Upload ISO artifact
+        if: ${{ inputs.upload-artifact }}
+        uses: actions/upload-artifact@v6
+        with:
+          name: ${{ inputs.artifact-name }}
+          path: |
+            result/iso/*.iso
+            SHA256SUMS
+          if-no-files-found: error
+
+      - name: Publish GitHub release
+        if: ${{ inputs.publish-release }}
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: |
+            result/iso/*.iso
+            SHA256SUMS

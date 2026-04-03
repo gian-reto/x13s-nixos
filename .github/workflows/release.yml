@@ -1,10 +1,12 @@
-name: CI
+name: Release
 
 on:
-  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
 
 permissions:
-  contents: read
+  contents: write
   id-token: write
 
 concurrency:
@@ -12,5 +14,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build-iso:
+  release-iso:
     uses: ./.github/workflows/build-iso.yml
+    with:
+      publish-release: true
