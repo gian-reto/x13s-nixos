@@ -189,3 +189,8 @@ Tagged releases publish the pre-built installer ISO and `SHA256SUMS` as GitHub r
 
 4. Wait for the `Release` GitHub Actions workflow to finish.
 5. Verify that the GitHub Release contains the ISO and `SHA256SUMS`.
+
+# Thanks
+
+- The original version of this was forked from [nixos-x13s](https://codeberg.org/adamcstephens/nixos-x13s) by Adam Stephens. Thanks, Adam!
+- The refactoring is heavily inspired by [x1e-nixos-config](https://github.com/kuruczgy/x1e-nixos-config), especially https://github.com/kuruczgy/x1e-nixos-config/pull/198. Thanks [kuruczgy](https://github.com/kuruczgy) and [phodina](https://github.com/phodina)!
